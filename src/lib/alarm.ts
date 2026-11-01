@@ -68,7 +68,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 export function notify(title: string, body: string): boolean {
   if (!notificationsSupported() || Notification.permission !== 'granted') return false;
   try {
-    new Notification(title, { body, icon: '/moon.svg', tag: title });
+    new Notification(title, { body, icon: `${import.meta.env.BASE_URL}moon.svg`, tag: title });
     return true;
   } catch {
     return false;

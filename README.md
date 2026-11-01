@@ -43,3 +43,8 @@ If a factor was not recorded, its weight is shared among the factors that were.
 ## Honest limitations
 - A web page cannot detect sleep stages. The smart alarm instead ramps up gently across your wake window, and only while the tab is open during a sleep session.
 - There is no direct sync with wearables or health platforms. Stage minutes can be entered manually or imported via CSV.
+
+## Deploy
+Pushing to `master` runs `.github/workflows/deploy.yml`, which tests, builds and publishes to GitHub Pages
+(enable it once under **Settings → Pages → Source: GitHub Actions**). The site is served at
+`https://mishanyaprivet.github.io/Sleep/`.
