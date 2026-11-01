@@ -7,7 +7,7 @@ const HEADERS = [
   'date', 'bedtime_local', 'wake_local', 'bedtime_utc', 'wake_utc', 'timezone',
   'time_in_bed_min', 'latency_min', 'awake_min', 'asleep_min', 'efficiency_pct',
   'quality_1_5', 'stage_awake_min', 'stage_rem_min', 'stage_light_min', 'stage_deep_min',
-  'stage_source', 'source', 'notes',
+  'stage_source', 'source', 'notes', 'snore_min', 'snore_episodes', 'noise_events',
   'journal_mood', 'journal_energy', 'journal_rested', 'journal_caffeine', 'journal_stress', 'journal_exercise',
 ] as const;
 
@@ -35,6 +35,7 @@ export function recordsToCsv(records: SleepRecord[], journal: JournalEntry[], go
         r.quality ?? '', st?.awake ?? '', st?.rem ?? '', st?.light ?? '', st?.deep ?? '',
         st ? (st.device ? `${st.source}:${st.device}` : st.source) : '',
         r.source, r.notes ?? '',
+        r.recording?.snoreMin ?? '', r.recording?.snoreEpisodes ?? '', r.recording?.noiseEvents ?? '',
         j?.mood ?? '', j?.energy ?? '', j?.rested ?? '', j?.caffeine ?? '', j?.stress ?? '',
         j?.exercise == null ? '' : j.exercise ? 'yes' : 'no',
       ].map(esc).join(',');

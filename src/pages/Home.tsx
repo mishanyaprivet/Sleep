@@ -8,6 +8,9 @@ import {
   Info,
   Layers,
   Lightbulb,
+  Mic,
+  MicOff,
+  Smartphone,
   Moon as MoonIcon,
   Plus,
   Sparkles,
@@ -43,6 +46,8 @@ import {
   signedMinutes,
 } from '../lib/time';
 import { unlockAudio } from '../lib/alarm';
+import { useRecording } from '../state/recording';
+import { LiveMeter, RestBreakdown, SoundSection } from '../components/SoundViews';
 
 function greeting(clockMin: number) {
   if (clockMin < 300) return 'Good night';
@@ -52,7 +57,8 @@ function greeting(clockMin: number) {
 }
 
 export function HomePage() {
-  const { nights, journal, settings, session, today, now, startSession, cancelSession } = useStore();
+  const { nights, journal, settings, session, today, now, cancelSession } = useStore();
+  const { beginNight, finishNight } = useRecording();
   const { openRecordForm, openScore, openNight, navigate, toast, confirm } = useUI();
   const { clock } = useClock();
   const tz = deviceTimeZone();
@@ -76,16 +82,10 @@ export function HomePage() {
 
   const start = async () => {
     unlockAudio();
-    await startSession();
+    await beginNight();
     toast(settings.smartAlarm.enabled ? 'Sleep well. Gentle wake alarm is armed.' : 'Sleep well. Tap “I’m awake” when you get up.');
   };
-  const stop = () => {
-    if (!session) return;
-    openRecordForm({
-      prefill: { bedtime: session.startedAt, wakeTime: new Date().toISOString(), timezone: session.timezone },
-      fromSession: true,
-    });
-  };
+  const stop = () => void finishNight();
   const cancel = async () => {
     if (await confirm({ title: 'Cancel this session?', body: 'Nothing will be saved.', confirmLabel: 'Cancel session', danger: true })) {
       await cancelSession();
@@ -208,9 +208,37 @@ export function HomePage() {
 
           {/* Stages */}
           <Card>
-            <CardHeader title="Sleep stages" icon={<Layers size={16} />} subtitle="From your wearable or manual entry" />
-            <StagesView night={last} onAdd={() => openRecordForm({ record: last.record })} />
+            {!last.hasStages && last.record.recording ? (
+              <>
+                <CardHeader title="Sleep pattern" icon={<Layers size={16} />} subtitle="Estimated from your overnight recording" />
+                <RestBreakdown rec={last.record.recording} />
+                <Button size="sm" variant="ghost" onClick={() => openRecordForm({ record: last.record })}>
+                  Add stage data from a wearable
+                </Button>
+              </>
+            ) : (
+              <>
+                <CardHeader title="Sleep stages" icon={<Layers size={16} />} subtitle="From your wearable or manual entry" />
+                <StagesView night={last} onAdd={() => openRecordForm({ record: last.record })} />
+              </>
+            )}
           </Card>
+
+          {last.record.recording && (
+            <Card className="span-2">
+              <CardHeader
+                title="Snoring & sounds"
+                icon={<Mic size={16} />}
+                subtitle="Recorded overnight on this device"
+                action={
+                  <Button size="sm" variant="ghost" onClick={() => openNight(last.record.id)}>
+                    Details
+                  </Button>
+                }
+              />
+              <SoundSection rec={last.record.recording} tz={last.record.timezone} compact />
+            </Card>
+          )}
 
           {/* Schedule */}
           <Card>
@@ -370,6 +398,7 @@ function SessionCard({
       </div>
       <div className="session__elapsed">{formatDuration(elapsed)}</div>
       <p className="muted">In bed since {instant(startedAt, tz)}</p>
+      <RecordingPanel />
       {a.enabled ? (
         <p className="session__alarm">
           <AlarmClock size={14} /> Gentle wake between {clock(normalizeClock(latest - a.windowMin))} and {clock(latest)} · keep this tab open
@@ -383,5 +412,52 @@ function SessionCard({
         I’m awake
       </Button>
     </Card>
+  );
+}
+
+function RecordingPanel() {
+  const { status, live, error, startRecording, supported } = useRecording();
+  if (status === 'recording' && live) {
+    return (
+      <div className="rec-panel">
+        <div className="rec-panel__top">
+          <span className="rec-dot" aria-hidden />
+          <span>{live.snoring ? 'Snoring detected' : `Recording sound${live.motion ? ' & motion' : ''}`}</span>
+        </div>
+        <LiveMeter level={live.level} snoring={live.snoring} />
+        <div className="rec-panel__stats">
+          <span>
+            <strong>{formatDuration(live.snoreMin, { short: true })}</strong> snoring
+          </span>
+          <span>
+            <strong>{live.snoreEpisodes}</strong> episodes
+          </span>
+          <span>
+            <strong>{live.clips}</strong> clips
+          </span>
+        </div>
+        <p className="rec-panel__tip">
+          <Smartphone size={13} /> Leave this screen open, phone on the mattress near your pillow and plugged in.
+          {!live.wakeLock && ' Turn off auto-lock — this browser can’t keep the screen on by itself.'}
+        </p>
+      </div>
+    );
+  }
+  if (status === 'starting') return <div className="rec-panel muted small">Starting microphone…</div>;
+  if (!supported) return null;
+  return (
+    <div className="rec-panel rec-panel--off">
+      <p className="small">
+        <MicOff size={14} />{' '}
+        {status === 'interrupted'
+          ? 'Recording paused — the app was closed or reloaded.'
+          : status === 'error'
+            ? error
+            : 'Not recording sounds tonight.'}
+      </p>
+      <Button size="sm" icon={<Mic size={14} />} onClick={() => void startRecording()}>
+        {status === 'interrupted' ? 'Resume recording' : 'Record snoring & sounds'}
+      </Button>
+    </div>
   );
 }

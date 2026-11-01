@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { StoreProvider, useStore } from './state/store';
 import { UIProvider, useUI } from './state/ui';
+import { RecordingProvider } from './state/recording';
 import { BottomNav } from './components/BottomNav';
 import { RecordFormSheet } from './components/RecordForm';
 import { NightDetailSheet, ScoreSheet } from './components/NightViews';
@@ -54,7 +55,9 @@ export default function App() {
   return (
     <StoreProvider>
       <UIProvider>
-        <Shell />
+        <RecordingProvider>
+          <Shell />
+        </RecordingProvider>
       </UIProvider>
     </StoreProvider>
   );

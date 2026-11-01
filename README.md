@@ -18,6 +18,13 @@ npm run build      # type-check + production build
 - **Journal**: a morning check-in (mood, energy, how rested you feel) and daytime habits (caffeine, exercise, stress, tags, notes), plus habit/sleep patterns shown as associations rather than causation.
 - **Profile**: sleep goal, target times, weekly goal, reminders (browser notifications), the gentle-wake smart alarm, 12h/24h clock, Midnight/Dawn theme, CSV import/export and a delete-all option.
 
+## Overnight recording (snoring & restlessness)
+When you start sleep with recording enabled, Lumen listens through the microphone and reads the accelerometer **on the device**:
+- **Probable snoring:** repeated low-pitched sounds (60–400 Hz dominant) in a breathing rhythm (3+ events 1.5–10 s apart), measured against an adaptive room-noise floor. It reports minutes, episodes and a timeline.
+- **Clips:** about 16 s of audio (4 s before plus 12 s after) for each snoring episode and each loud noise. The night is capped at 20 snore clips and 10 noise clips, keeping the loudest. Clips are saved as WAV in IndexedDB, never uploaded, and deleted automatically after the retention period you choose.
+- **Restlessness estimate:** each minute is labelled Calm / Restless / Likely awake from movement and sound. This is **not** sleep-stage measurement, and the UI says so.
+- **Browser limits:** the page must stay open with the screen on. Lumen uses the Screen Wake Lock API where it is available. Minutes when the browser paused show as "no data", and a reload offers to resume.
+
 ## Architecture
 ```
 src/

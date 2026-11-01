@@ -9,6 +9,7 @@ import { StackedBar } from './charts';
 import { Sheet } from './Sheet';
 import { Button, EmptyState, Pill, cx } from './ui';
 import { QUALITY_LABELS } from './icons';
+import { RestBreakdown, SoundSection } from './SoundViews';
 
 // ---------------------------------------------------------------------------
 // Timeline
@@ -241,9 +242,24 @@ export function NightDetailSheet() {
           </div>
           <SleepTimeline night={night} />
           <div>
-            <h3 className="subhead">Sleep stages</h3>
-            <StagesView night={night} onAdd={edit} />
+            {!night.hasStages && night.record.recording ? (
+              <>
+                <h3 className="subhead">Sleep pattern · estimated from recording</h3>
+                <RestBreakdown rec={night.record.recording} />
+              </>
+            ) : (
+              <>
+                <h3 className="subhead">Sleep stages</h3>
+                <StagesView night={night} onAdd={edit} />
+              </>
+            )}
           </div>
+          {night.record.recording && (
+            <div>
+              <h3 className="subhead">Snoring &amp; sounds</h3>
+              <SoundSection rec={night.record.recording} tz={night.record.timezone} />
+            </div>
+          )}
           <div>
             <h3 className="subhead">Score breakdown</h3>
             <ScoreBreakdown night={night} />

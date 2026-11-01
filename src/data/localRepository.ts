@@ -1,5 +1,6 @@
 import type { SleepRepository } from './repository';
-import { DEFAULT_SETTINGS, type ActiveSession, type JournalEntry, type Settings, type SleepRecord } from './types';
+import { DEFAULT_SETTINGS, type ActiveSession, type JournalEntry, type NightRecording, type Settings, type SleepRecord } from './types';
+import { clipStore } from './clipStore';
 
 const PREFIX = 'lumen.v1.';
 const KEYS = {
@@ -7,6 +8,7 @@ const KEYS = {
   journal: `${PREFIX}journal`,
   settings: `${PREFIX}settings`,
   session: `${PREFIX}activeSession`,
+  live: `${PREFIX}liveRecording`,
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -58,7 +60,12 @@ export class LocalStorageRepository implements SleepRepository {
 
   async getSettings(): Promise<Settings> {
     const s = read<Partial<Settings>>(KEYS.settings, {});
-    return { ...DEFAULT_SETTINGS, ...s, smartAlarm: { ...DEFAULT_SETTINGS.smartAlarm, ...(s.smartAlarm ?? {}) } };
+    return {
+      ...DEFAULT_SETTINGS,
+      ...s,
+      smartAlarm: { ...DEFAULT_SETTINGS.smartAlarm, ...(s.smartAlarm ?? {}) },
+      recording: { ...DEFAULT_SETTINGS.recording, ...(s.recording ?? {}) },
+    };
   }
   async saveSettings(settings: Settings) {
     write(KEYS.settings, settings);
@@ -71,7 +78,32 @@ export class LocalStorageRepository implements SleepRepository {
     write(KEYS.session, session);
   }
 
+  async saveClip(id: string, blob: Blob) {
+    await clipStore.put(id, blob);
+  }
+  async getClip(id: string) {
+    return clipStore.get(id);
+  }
+  async deleteClips(ids: string[]) {
+    if (ids.length) await clipStore.delete(ids);
+  }
+  async listClipIds() {
+    return clipStore.keys();
+  }
+
+  async getLiveRecording() {
+    return read<NightRecording | null>(KEYS.live, null);
+  }
+  async setLiveRecording(rec: NightRecording | null) {
+    write(KEYS.live, rec);
+  }
+
   async clearAll() {
     Object.values(KEYS).forEach((k) => localStorage.removeItem(k));
+    try {
+      await clipStore.clear();
+    } catch {
+      /* IndexedDB unavailable */
+    }
   }
 }

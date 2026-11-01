@@ -34,9 +34,62 @@ export interface SleepRecord {
   quality?: number | null;
   notes?: string;
   stages?: SleepStages | null;
+  /** Overnight sound & motion recording summary (from this device's mic/accelerometer). */
+  recording?: NightRecording | null;
   source: 'manual' | 'session' | 'import';
   createdAt: string;
   updatedAt: string;
+}
+
+/** One minute of an overnight recording. `db` null = no data (tab hidden / paused). */
+export interface SoundEpoch {
+  /** Minutes since recording start. */
+  m: number;
+  /** Mean level, dBFS (uncalibrated, relative). */
+  db: number | null;
+  peak: number | null;
+  /** Seconds of probable snoring within this minute. */
+  snore: number;
+  /** Non-snore sound events. */
+  events: number;
+  /** Share of motion samples showing movement (0–1); null when no motion sensor. */
+  motion: number | null;
+}
+
+export interface SoundClip {
+  id: string;
+  /** ISO instant the clip starts. */
+  at: string;
+  durationSec: number;
+  kind: 'snore' | 'noise';
+  /** Peak level above the room's quiet floor, dB. */
+  peakAboveFloor: number;
+}
+
+export type RecordingSensitivity = 'low' | 'medium' | 'high';
+
+export interface NightRecording {
+  startedAt: string;
+  endedAt: string;
+  epochs: SoundEpoch[];
+  snoreMin: number;
+  snoreEpisodes: number;
+  noiseEvents: number;
+  /** Quiet-room floor (10th percentile of minute levels), dBFS. */
+  floorDb: number | null;
+  peakAboveFloor: number | null;
+  motionAvailable: boolean;
+  gapsMin: number;
+  clips: SoundClip[];
+  sensitivity: RecordingSensitivity;
+}
+
+export interface RecordingSettings {
+  enabled: boolean;
+  sensitivity: RecordingSensitivity;
+  keepClips: boolean;
+  /** Delete clips older than N days; 0 = keep forever. */
+  retentionDays: number;
 }
 
 export type JournalTag =
@@ -88,6 +141,7 @@ export interface Settings {
   reminderLeadMin: number;
   windDownReminder: boolean;
   smartAlarm: SmartAlarmSettings;
+  recording: RecordingSettings;
   clock: '12h' | '24h';
   theme: 'dark' | 'light';
   onboarded: boolean;
@@ -108,6 +162,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reminderLeadMin: 30,
   windDownReminder: false,
   smartAlarm: { enabled: false, time: '07:00', windowMin: 30, sound: 'chime' },
+  recording: { enabled: true, sensitivity: 'medium', keepClips: true, retentionDays: 30 },
   clock: '24h',
   theme: 'dark',
   onboarded: false,

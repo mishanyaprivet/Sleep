@@ -4,6 +4,7 @@ import { AlarmClock, Sunrise } from 'lucide-react';
 import { useStore } from '../state/store';
 import { useUI } from '../state/ui';
 import { useClock } from '../state/format';
+import { useRecording } from '../state/recording';
 import { alarmPhase, notify, playChime } from '../lib/alarm';
 import { clockDiff, clockMinutesInZone, deviceTimeZone, normalizeClock, parseHHmm, todayKey } from '../lib/time';
 import { Button } from './ui';
@@ -32,7 +33,8 @@ function markFired(kind: string, date: string) {
  */
 export function AlarmController() {
   const { settings, session, now } = useStore();
-  const { toast, openRecordForm } = useUI();
+  const { toast } = useUI();
+  const { finishNight } = useRecording();
   const { clock } = useClock();
   const [ringing, setRinging] = useState(false);
   const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
@@ -131,10 +133,7 @@ export function AlarmController() {
               setRinging(false);
               setSnoozeUntil(null);
               setDismissedFor(session.startedAt);
-              openRecordForm({
-                prefill: { bedtime: session.startedAt, wakeTime: new Date().toISOString(), timezone: session.timezone },
-                fromSession: true,
-              });
+              void finishNight();
             }}
           >
             I’m up

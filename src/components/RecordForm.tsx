@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ChevronDown, Moon as MoonIcon, Trash2, Watch } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Mic, Moon as MoonIcon, Trash2, Watch } from 'lucide-react';
 import { Sheet } from './Sheet';
 import { Button, Field, ScalePicker, Stepper, cx } from './ui';
 import { useStore } from '../state/store';
@@ -104,6 +104,7 @@ export function RecordFormSheet() {
     quality: f.quality,
     notes: f.notes.trim() || undefined,
     stages,
+    recording: editing?.recording ?? recordForm?.prefill?.recording ?? null,
     source: editing?.source ?? (recordForm?.fromSession ? 'session' : 'manual'),
     createdAt: editing?.createdAt ?? '',
     updatedAt: '',
@@ -232,6 +233,13 @@ export function RecordFormSheet() {
             <strong className={m.goalDiff >= -5 ? 'tone-good' : 'tone-warn'}>{signedMinutes(m.goalDiff)}</strong>
           </div>
         </div>
+
+        {draft.recording && (
+          <p className="form-note rec-note">
+            <Mic size={13} /> Overnight recording attached · {formatDuration(draft.recording.snoreMin, { short: true })} snoring ·{' '}
+            {draft.recording.clips.length} clips
+          </p>
+        )}
 
         <div className="time-pair">
           <Field label="Time to fall asleep" hint="Your best estimate">

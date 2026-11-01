@@ -8,6 +8,7 @@ import { deviceTimeZone, todayKey } from '../lib/time';
 
 interface StoreValue {
   ready: boolean;
+  repository: SleepRepository;
   records: SleepRecord[];
   journal: JournalEntry[];
   settings: Settings;
@@ -177,6 +178,7 @@ export function StoreProvider({
 
   const value: StoreValue = {
     ready,
+    repository: repo,
     records,
     journal,
     settings,

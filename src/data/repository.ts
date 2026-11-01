@@ -1,4 +1,4 @@
-import type { ActiveSession, JournalEntry, Settings, SleepRecord } from './types';
+import type { ActiveSession, JournalEntry, NightRecording, Settings, SleepRecord } from './types';
 
 /**
  * Storage abstraction. The app only talks to this interface, so swapping
@@ -20,6 +20,16 @@ export interface SleepRepository {
 
   getActiveSession(): Promise<ActiveSession | null>;
   setActiveSession(session: ActiveSession | null): Promise<void>;
+
+  /** Audio clip blobs (Supabase: Storage bucket). */
+  saveClip(id: string, blob: Blob): Promise<void>;
+  getClip(id: string): Promise<Blob | null>;
+  deleteClips(ids: string[]): Promise<void>;
+  listClipIds(): Promise<string[]>;
+
+  /** In-progress overnight recording, so a reload doesn't lose the night. */
+  getLiveRecording(): Promise<NightRecording | null>;
+  setLiveRecording(rec: NightRecording | null): Promise<void>;
 
   clearAll(): Promise<void>;
 }

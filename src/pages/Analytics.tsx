@@ -287,6 +287,26 @@ export function AnalyticsPage() {
           )}
         </Card>
 
+        {days.some((k) => byDate.get(k)?.record.recording) && (
+          <Card className="span-2">
+            <CardHeader title="Snoring" icon={<BarChart3 size={16} />} subtitle="Minutes of probable snoring on recorded nights" />
+            <BarChart
+              ariaLabel="Snoring minutes per night"
+              data={days.map((k) => {
+                const r = byDate.get(k)?.record.recording;
+                return {
+                  key: k,
+                  label: label(k),
+                  value: r ? r.snoreMin : null,
+                  tip: r ? <><strong>{formatDuration(r.snoreMin)} snoring</strong><span>{formatDateKey(k)} · {r.snoreEpisodes} episodes</span></> : undefined,
+                };
+              })}
+              yFormat={(v) => `${Math.round(v)}m`}
+              height={160}
+            />
+          </Card>
+        )}
+
         <Card>
           <CardHeader
             title="Schedule changes"

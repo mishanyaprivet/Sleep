@@ -5,6 +5,7 @@ import {
   Database,
   Download,
   HeartPulse,
+  Mic,
   Info,
   Palette,
   Play,
@@ -21,10 +22,27 @@ import { Button, Card, CardHeader, Field, Segmented, Stepper, Toggle, Pill } fro
 import { csvToRecords, downloadText, recordsToCsv } from '../data/csv';
 import { notificationsSupported, playChime, requestNotificationPermission, unlockAudio } from '../lib/alarm';
 import { formatDuration, normalizeClock, parseHHmm, toHHmm } from '../lib/time';
-import type { SmartAlarmSettings } from '../data/types';
+import type { RecordingSettings, SmartAlarmSettings } from '../data/types';
+import { micSupported } from '../lib/recorder';
 
 export function ProfilePage() {
-  const { settings, updateSettings, records, journal, importRecords, clearAll, today } = useStore();
+  const { settings, updateSettings, records, journal, importRecords, clearAll, today, repository } = useStore();
+  const recSet = settings.recording;
+  const setRec = (p: Partial<RecordingSettings>) => updateSettings({ recording: { ...recSet, ...p } });
+  const clipCount = records.reduce((a, r) => a + (r.recording?.clips.length ?? 0), 0);
+  const deleteAllClips = async () => {
+    const ok = await confirm({
+      title: 'Delete all audio clips?',
+      body: `${clipCount} clips will be removed. Snoring statistics are kept.`,
+      confirmLabel: 'Delete clips',
+      danger: true,
+    });
+    if (!ok) return;
+    const ids = records.flatMap((r) => r.recording?.clips.map((c) => c.id) ?? []);
+    await repository.deleteClips(ids);
+    await importRecords(records.filter((r) => r.recording?.clips.length).map((r) => ({ ...r, recording: { ...r.recording!, clips: [] } })));
+    toast('Audio clips deleted');
+  };
   const { toast, confirm } = useUI();
   const { clock } = useClock();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -232,6 +250,69 @@ export function ProfilePage() {
                 <strong>What it can’t do.</strong> Lumen has no access to motion or heart-rate sensors, so it{' '}
                 <em>cannot detect your sleep stage</em> or pick the “optimal” light-sleep moment. The window gives a gradual
                 wake instead. Keep this tab open, the screen allowed to stay on, and your device’s volume up.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader title="Snoring & sound recording" icon={<Mic size={16} />} subtitle="Uses this device’s microphone and motion sensor" />
+          <div className="stack">
+            <Toggle
+              checked={recSet.enabled}
+              onChange={(v) => setRec({ enabled: v })}
+              disabled={!micSupported()}
+              label="Record when I start sleep"
+              description={micSupported() ? 'Detects probable snoring, loud noises and movement' : 'Microphone not available in this browser'}
+            />
+            <Field label="Sensitivity" hint="Higher picks up quieter snoring, but also more background noise.">
+              <Segmented
+                label="Sensitivity"
+                size="sm"
+                value={recSet.sensitivity}
+                onChange={(v) => setRec({ sensitivity: v })}
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                ]}
+              />
+            </Field>
+            <Toggle
+              checked={recSet.keepClips}
+              onChange={(v) => setRec({ keepClips: v })}
+              label="Save audio clips"
+              description="Short clips (~16 s) of snoring and loud noises to replay in the morning"
+            />
+            <Field label="Keep clips for">
+              <Segmented
+                label="Clip retention"
+                size="sm"
+                value={recSet.retentionDays}
+                onChange={(v) => setRec({ retentionDays: v })}
+                options={[
+                  { value: 7, label: '7 days' },
+                  { value: 30, label: '30 days' },
+                  { value: 0, label: 'Forever' },
+                ]}
+              />
+            </Field>
+            {clipCount > 0 && (
+              <Button size="sm" variant="ghost" className="btn--danger-text" icon={<Trash2 size={14} />} onClick={deleteAllClips}>
+                Delete all {clipCount} clips
+              </Button>
+            )}
+            <div className="explainer explainer--box">
+              <p>
+                <strong>How to use.</strong> Start sleep, keep Lumen open on screen, and put the phone on the mattress near your
+                pillow, plugged in. Audio is analysed on the device; only short clips are kept, never the whole night, and nothing
+                is uploaded.
+              </p>
+              <p>
+                <strong>Limits.</strong> Snoring detection looks for repeated low-pitched sounds in a breathing rhythm, so a
+                partner, pet or fan can be counted too. Restlessness is estimated from movement and sounds — it is{' '}
+                <em>not</em> a measurement of REM, light or deep sleep. If the screen locks or you switch apps, the browser
+                pauses recording (shown as “no data”).
               </p>
             </div>
           </div>
