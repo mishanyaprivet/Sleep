@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900" font-family="DejaVu Sans, Arial, sans-serif" font-size="15">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#000"/>
+    </marker>
+  </defs>
+  <rect width="720" height="900" fill="#fff"/>
+  <g fill="#fff" stroke="#000" stroke-width="2">
+    <!-- Початок -->
+    <rect x="180" y="20" width="240" height="50" rx="25"/>
+    <!-- Вхідні дані -->
+    <polygon points="185,100 435,100 415,150 165,150"/>
+    <!-- Умова завершення рекурсії -->
+    <polygon points="300,180 410,230 300,280 190,230"/>
+    <!-- count = 1 -->
+    <rect x="190" y="310" width="220" height="50"/>
+    <!-- Умова повторення символу -->
+    <polygon points="300,400 450,470 300,540 150,470"/>
+    <!-- count = count + 1 -->
+    <rect x="490" y="445" width="160" height="50"/>
+    <!-- Додавання до результату -->
+    <rect x="150" y="580" width="300" height="50"/>
+    <!-- Рекурсивний виклик (визначений процес) -->
+    <rect x="140" y="660" width="320" height="60"/>
+    <line x1="154" y1="660" x2="154" y2="720"/>
+    <line x1="446" y1="660" x2="446" y2="720"/>
+    <!-- Вихідні дані -->
+    <polygon points="190,760 430,760 410,810 170,810"/>
+    <!-- Кінець -->
+    <rect x="180" y="840" width="240" height="50" rx="25"/>
+  </g>
+
+  <g stroke="#000" stroke-width="2" fill="none">
+    <line x1="300" y1="70" x2="300" y2="99" marker-end="url(#a)"/>
+    <line x1="300" y1="150" x2="300" y2="179" marker-end="url(#a)"/>
+    <line x1="300" y1="280" x2="300" y2="309" marker-end="url(#a)"/>
+    <line x1="300" y1="360" x2="300" y2="399" marker-end="url(#a)"/>
+    <!-- Так: count + 1 -->
+    <line x1="450" y1="470" x2="489" y2="470" marker-end="url(#a)"/>
+    <!-- повернення в цикл підрахунку -->
+    <polyline points="570,445 570,382 300,382"/>
+    <line x1="300" y1="540" x2="300" y2="579" marker-end="url(#a)"/>
+    <line x1="300" y1="630" x2="300" y2="659" marker-end="url(#a)"/>
+    <line x1="300" y1="720" x2="300" y2="759" marker-end="url(#a)"/>
+    <!-- Так: i >= довжина -> до виходу -->
+    <polyline points="410,230 680,230 680,740 300,740"/>
+    <line x1="300" y1="810" x2="300" y2="839" marker-end="url(#a)"/>
+  </g>
+  <g fill="#000" stroke="#000"><circle cx="300" cy="382" r="3.5"/><circle cx="300" cy="740" r="3.5"/></g>
+
+  <g text-anchor="middle" fill="#000">
+    <text x="300" y="50">Початок</text>
+    <text x="300" y="130">Вхід: s, i, result</text>
+    <text x="300" y="235">i ≥ довжина(s)?</text>
+    <text x="300" y="340">count = 1</text>
+    <text x="300" y="458">i + count &lt; довжина(s)</text>
+    <text x="300" y="477">і</text>
+    <text x="300" y="496">s[i + count] = s[i]?</text>
+    <text x="570" y="475">count = count + 1</text>
+    <text x="300" y="610">result = result + s[i] + count</text>
+    <text x="300" y="686">result = rle(s, i + count, result)</text>
+    <text x="300" y="707" font-size="13" font-style="italic">(рекурсивний виклик)</text>
+    <text x="300" y="790">Повернути result</text>
+    <text x="300" y="870">Кінець</text>
+  </g>
+  <g fill="#000" font-size="14">
+    <text x="420" y="222">Так</text>
+    <text x="308" y="298">Ні</text>
+    <text x="454" y="458">Так</text>
+    <text x="308" y="558">Ні</text>
+  </g>
+</svg>
